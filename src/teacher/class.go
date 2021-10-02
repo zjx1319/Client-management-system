@@ -134,3 +134,92 @@ func endClass() {
 	Rconn.Do("hset", "class"+strconv.Itoa(class.ClassNo), "classData", string(dataByte))
 	EndClassMenu()
 }
+
+func checkClassData() {
+	var key int
+	fmt.Printf("当前课程有%d个数据 您想看哪节课?\n", class.ClassNo)
+	fmt.Printf("请输入（1-%d）：\n", class.ClassNo)
+	fmt.Scanf("%d\n", &key)
+	if key < 1 || key > class.ClassNo {
+		fmt.Println("没有这节课的数据")
+		return
+	}
+
+	res, _ := redis.String(Rconn.Do("hget", "class"+strconv.Itoa(key), "classData"))
+	var cData data.ClassData
+	var uData data.User
+	var ucData data.UserClassData
+	json.Unmarshal([]byte(res), &cData)
+	fmt.Printf("您选择了第%d节课\n", cData.ClassNo)
+	fmt.Printf("开始时间：%s 结束时间：%s\n", cData.BeginTime.Format("2006-01-02 15:04:05"), cData.EndTime.Format("2006-01-02 15:04:05"))
+	fmt.Println("状态说明：1正常 2早退 3迟到 4迟到早退 5缺勤")
+	fmt.Println("学号\t姓名\t状态\t加入时间\t\t离开时间\t\t机位")
+	uDatas, _ := redis.Strings(Rconn.Do("hkeys", "userData"))
+	for uId := range uDatas {
+		res, _ = redis.String(Rconn.Do("hget", "userData", uDatas[uId]))
+		json.Unmarshal([]byte(res), &uData)
+		res, err := redis.String(Rconn.Do("hget", "class"+strconv.Itoa(key), uDatas[uId]))
+		if err == redis.ErrNil {
+			//课程中没有这个学生的数据 缺勤!
+			fmt.Printf("%s\t%s\t5\n", uData.UserId, uData.UserName)
+		} else {
+			json.Unmarshal([]byte(res), &ucData)
+			if ucData.ClassStatus == 0 {
+				//等于0 状态未更新
+				if ucData.JoinTime.Before(cData.BeginTime) {
+					//没有迟到
+					if ucData.LeaveTime.After(cData.EndTime) {
+						//没有早退
+						ucData.ClassStatus = data.ClassStatus_Normal
+					} else {
+						//早退
+						ucData.ClassStatus = data.ClassStatus_LeaveEarly
+					}
+				} else {
+					//迟到了
+					if ucData.LeaveTime.After(cData.EndTime) {
+						//没早退
+						ucData.ClassStatus = data.ClassStatus_JoinLate
+					} else {
+						ucData.ClassStatus = data.ClassStatus_LEJL
+					}
+				}
+				//把状态记录到数据库
+				dataByte, _ := json.Marshal(ucData)
+				Rconn.Do("hset", "class"+strconv.Itoa(key), uDatas[uId], string(dataByte))
+			}
+			fmt.Printf("%s\t%s\t%d\t%s\t%s\t%s\n", uData.UserId, uData.UserName, ucData.ClassStatus,
+				ucData.JoinTime.Format("2006-01-02 15:04:05"), ucData.LeaveTime.Format("2006-01-02 15:04:05"),
+				ucData.Seat)
+		}
+	}
+	//输出学生数据完成
+	fmt.Println("您可以输入“学号 状态”进行修改 输入“0 0”返回菜单")
+	var id string
+	var status int
+	for {
+		fmt.Scanf("%s %d\n", &id, &status)
+		if id == "0" && status == 0 {
+			return
+		} else if status < 1 || status > 5 {
+			fmt.Println("您输入的状态有误 请重新输入")
+		} else {
+			res, err := redis.String(Rconn.Do("hget", "class"+strconv.Itoa(key), id))
+			if err == redis.ErrNil {
+				//没数据 直接提交一个新的
+				ucData.UserId = id
+				ucData.ClassStatus = status
+				ucData.JoinTime = time.Now()
+				ucData.LeaveTime = time.Now()
+				ucData.Seat = "add by teacher"
+			} else {
+				//有数据 修改
+				json.Unmarshal([]byte(res), &ucData)
+				ucData.ClassStatus = status
+			}
+			//记录到数据库
+			dataByte, _ := json.Marshal(ucData)
+			Rconn.Do("hset", "class"+strconv.Itoa(key), id, string(dataByte))
+		}
+	}
+}
