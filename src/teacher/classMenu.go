@@ -22,6 +22,7 @@ func ShowClassMenu() {
 			enterClass()
 		case 2:
 			fmt.Println("课堂数据")
+			checkClassData()
 		case 3:
 			fmt.Println("作业数据")
 		case 4:

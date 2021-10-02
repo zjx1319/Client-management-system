@@ -7,8 +7,9 @@ const (
 	ClassStatus_Default    = 0 //默认
 	ClassStatus_Normal     = 1 //正常
 	ClassStatus_LeaveEarly = 2 //早退
-	ClassStatus_JoinLate   = 3 //迟早
-	ClassStatus_Absent     = 4 //缺勤
+	ClassStatus_JoinLate   = 3 //迟到
+	ClassStatus_LEJL       = 4 //迟到早退
+	ClassStatus_Absent     = 5 //缺勤
 )
 
 //用户数据

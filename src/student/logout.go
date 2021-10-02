@@ -27,6 +27,6 @@ func logout() (err error) {
 	}
 	//发送消息给服务器
 	err = tcp.WritePkg(conn, []byte(dataByte))
-	fmt.Println("已发送注销请求 成功前请不要关闭本程序")
+	fmt.Println("已发送注销请求 成功后本程序自动退出")
 	return
 }

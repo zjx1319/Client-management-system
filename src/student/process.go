@@ -34,9 +34,6 @@ func process() (err error) {
 			if logoutResMes.Result == data.Logout_Success {
 				conn.Close()
 				fmt.Println("已退出课堂")
-				fmt.Printf("Press any key to exit...")
-				b := make([]byte, 1)
-				os.Stdin.Read(b)
 				os.Exit(0)
 			} else {
 				fmt.Printf("注销失败 返回信息%s\n", logoutResMes.Result)
