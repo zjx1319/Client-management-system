@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"src/data"
 	"src/tcp"
@@ -18,13 +19,17 @@ func process(conn net.Conn) {
 	for {
 		msg, err := tcp.ReadPkg(conn)
 		if err != nil {
-			//出现错误 掉线了
-			if user.UserName != "" {
-				fmt.Printf("【%s】学生%s异常掉线\n", user.UserId, user.UserName)
-				userClassData.LeaveTime = time.Now()
-				dataByte, _ := json.Marshal(userClassData)
-				Rconn.Do("hset", "class"+strconv.Itoa(class.ClassNo), user.UserId, string(dataByte))
-				classData.StudentNum--
+			// 通常遇到的错误是连接中断或被关闭，用io.EOF表示
+			if err == io.EOF {
+				if user.UserName != "" {
+					fmt.Printf("【%s】学生%s异常掉线\n", user.UserId, user.UserName)
+					userClassData.LeaveTime = time.Now()
+					dataByte, _ := json.Marshal(userClassData)
+					Rconn.Do("hset", "class"+strconv.Itoa(class.ClassNo), user.UserId, string(dataByte))
+					classData.StudentNum--
+				}
+			} else {
+				fmt.Println(err)
 			}
 			return
 		}
