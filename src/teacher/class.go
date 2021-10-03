@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"src/config"
 	"src/data"
 	"strconv"
 	"time"
@@ -93,14 +94,12 @@ func enterClass() {
 	Rconn.Do("set", "classData", string(dataByte))
 
 	classData.ClassNo = class.ClassNo
-	classData.StudentNum = 0
 
 	dataByte, _ = json.Marshal(classData)
 	Rconn.Do("hset", "class"+strconv.Itoa(class.ClassNo), "classData", string(dataByte))
 
 	//提示信息
-	fmt.Println("开始在8989端口监听....")
-	listen, err := net.Listen("tcp", "0.0.0.0:8989")
+	listen, err := net.Listen("tcp", "0.0.0.0:"+config.SerPoint)
 	if err != nil {
 		fmt.Println("net.Listen err=", err)
 		return
@@ -150,8 +149,9 @@ func checkClassData() {
 	var uData data.User
 	var ucData data.UserClassData
 	json.Unmarshal([]byte(res), &cData)
-	fmt.Printf("您选择了第%d节课\n", cData.ClassNo)
-	fmt.Printf("开始时间：%s 结束时间：%s\n", cData.BeginTime.Format("2006-01-02 15:04:05"), cData.EndTime.Format("2006-01-02 15:04:05"))
+	fmt.Printf("您选择了第%d节课 持续时长%d分钟\n", cData.ClassNo, int(cData.EndTime.Sub(cData.BeginTime).Minutes()))
+	fmt.Printf("开始时间：%s 结束时间：%s\n",
+		cData.BeginTime.Format("2006-01-02 15:04:05"), cData.EndTime.Format("2006-01-02 15:04:05"))
 	fmt.Println("状态说明：1正常 2早退 3迟到 4迟到早退 5缺勤")
 	fmt.Println("学号\t姓名\t状态\t加入时间\t\t离开时间\t\t机位")
 	uDatas, _ := redis.Strings(Rconn.Do("hkeys", "userData"))

@@ -19,8 +19,10 @@ func ShowClassMenu() {
 		switch key {
 		case 1:
 			fmt.Println("1. 发送消息")
+			sendMsg()
 		case 2:
 			fmt.Println("2. 举手提问")
+			askQue()
 		case 3:
 			fmt.Println("3. 作业中心")
 		case 4:

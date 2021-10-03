@@ -45,7 +45,7 @@ func login() (err error) {
 	var loginResMes data.LoginResMes
 	json.Unmarshal([]byte(msg.Data), &loginResMes)
 	if loginResMes.Result == data.Login_IDNotFound {
-		fmt.Println("用户不存在, 请联系老师解决")
+		fmt.Println("用户不存在!")
 		return
 	} else if loginResMes.Result == data.Login_PwdError {
 		fmt.Println("密码错误！")

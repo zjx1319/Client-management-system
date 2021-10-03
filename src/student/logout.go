@@ -2,9 +2,9 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"src/data"
 	"src/tcp"
+	"time"
 )
 
 func logout() (err error) {
@@ -27,6 +27,6 @@ func logout() (err error) {
 	}
 	//发送消息给服务器
 	err = tcp.WritePkg(conn, []byte(dataByte))
-	fmt.Println("已发送注销请求 成功后本程序自动退出")
+	time.Sleep(1 * time.Minute)
 	return
 }

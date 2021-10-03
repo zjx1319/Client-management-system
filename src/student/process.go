@@ -38,8 +38,21 @@ func process() (err error) {
 			} else {
 				fmt.Printf("注销失败 返回信息%s\n", logoutResMes.Result)
 			}
+		case data.ChatResMesType:
+			//接收到消息
+			//使用json序列化
+			var chatResMes data.ChatResMes
+			json.Unmarshal([]byte(msg.Data), &chatResMes)
+			fmt.Printf("[M][%s]%s:%s\n", chatResMes.SendUserId, chatResMes.SendUserName, chatResMes.Content)
+		case data.ChatPResMesType:
+			//接收到私聊消息
+			//使用json序列化
+			var chatPResMes data.ChatPResMes
+			json.Unmarshal([]byte(msg.Data), &chatPResMes)
+			fmt.Printf("[P][%s]%s:%s\n", chatPResMes.SendUserId, chatPResMes.SendUserName, chatPResMes.Content)
+
 		default:
-			fmt.Printf("%s 消息类型无法处理 请联系老师解决\n", msg.Type)
+			fmt.Printf("%s 消息类型无法处理\n", msg.Type)
 		}
 	}
 }

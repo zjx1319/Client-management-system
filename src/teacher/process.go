@@ -15,16 +15,17 @@ func process(conn net.Conn) {
 	defer conn.Close()
 	var user data.User
 	var userClassData data.UserClassData
+	var userProcess UserProcess
 	for {
 		msg, err := tcp.ReadPkg(conn)
 		if err != nil {
 			//出现错误 掉线了
 			if user.UserName != "" {
-				fmt.Printf("【%s】学生%s异常掉线\n", user.UserId, user.UserName)
+				fmt.Printf("[C][%s]学生%s异常掉线\n", user.UserId, user.UserName)
 				userClassData.LeaveTime = time.Now()
 				dataByte, _ := json.Marshal(userClassData)
 				Rconn.Do("hset", "class"+strconv.Itoa(class.ClassNo), user.UserId, string(dataByte))
-				classData.StudentNum--
+				DelOnlineUser(user.UserId)
 			}
 			return
 		}
@@ -44,8 +45,11 @@ func process(conn net.Conn) {
 				userClassData.ClassStatus = 0
 				dataByte, _ := json.Marshal(userClassData)
 				Rconn.Do("hset", "class"+strconv.Itoa(class.ClassNo), user.UserId, string(dataByte))
-				classData.StudentNum++
-				fmt.Printf("【%s】学生%s已登录 机位为%s 当前在线：%d\n", loginMes.UserId, user.UserName, loginMes.Seat, classData.StudentNum)
+				userProcess.userData = user
+				userProcess.conn = conn
+				AddOnlineUser(userProcess)
+				onlineNum := GetOnlineUserNum()
+				fmt.Printf("[C][%s]学生%s已登录 机位为%s 当前在线：%d\n", loginMes.UserId, user.UserName, loginMes.Seat, onlineNum)
 			}
 
 			//使用json序列化
@@ -65,8 +69,8 @@ func process(conn net.Conn) {
 				userClassData.LeaveTime = time.Now()
 				dataByte, _ := json.Marshal(userClassData)
 				Rconn.Do("hset", "class"+strconv.Itoa(class.ClassNo), user.UserId, string(dataByte))
-				classData.StudentNum--
-				fmt.Printf("【%s】学生%s已离开\n", user.UserId, user.UserName)
+				DelOnlineUser(user.UserId)
+				fmt.Printf("[C][%s]学生%s已离开\n", user.UserId, user.UserName)
 				//使用json序列化
 				dataByte, _ = json.Marshal(logoutResMes)
 				msg.Type = data.LogoutResMesType
@@ -77,10 +81,18 @@ func process(conn net.Conn) {
 				tcp.WritePkg(conn, []byte(dataByte))
 				return
 			} else {
-				fmt.Printf("注销消息出现错误 %s %s\n", logoutMes.UserId, user.UserId)
+				fmt.Printf("[W]注销消息出现错误 %s %s\n", logoutMes.UserId, user.UserId)
 			}
+		case data.ChatMesType: //处理聊天
+			var chatMes data.ChatMes
+			json.Unmarshal([]byte(msg.Data), &chatMes)
+			sendResMsg(user, chatMes)
+		case data.ChatPMesType: //处理私聊
+			var chatPMes data.ChatPMes
+			json.Unmarshal([]byte(msg.Data), &chatPMes)
+			sendPResMsg(user, chatPMes)
 		default:
-			fmt.Printf("消息类型为%s 无法处理\n", msg.Type)
+			fmt.Printf("[W]消息类型为%s 无法处理\n", msg.Type)
 			return
 		}
 	}

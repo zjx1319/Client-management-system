@@ -12,8 +12,7 @@ type Class struct {
 
 //一节课的数据
 type ClassData struct {
-	ClassNo    int       `json:"classNo"`   //课程numero sign
-	BeginTime  time.Time `json:"beginTime"` //开始时间
-	EndTime    time.Time `json:"endTime"`   //结束时间
-	StudentNum int       `json:"-"`         //在线的学生数
+	ClassNo   int       `json:"classNo"`   //课程numero sign
+	BeginTime time.Time `json:"beginTime"` //开始时间
+	EndTime   time.Time `json:"endTime"`   //结束时间
 }
