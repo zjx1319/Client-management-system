@@ -21,7 +21,7 @@ func process(conn net.Conn) {
 		if err != nil {
 			//出现错误 掉线了
 			if user.UserName != "" {
-				fmt.Printf("[C][%s]学生%s异常掉线\n", user.UserId, user.UserName)
+				fmt.Printf("[L][%s]学生%s异常掉线\n", user.UserId, user.UserName)
 				userClassData.LeaveTime = time.Now()
 				dataByte, _ := json.Marshal(userClassData)
 				Rconn.Do("hset", "class"+strconv.Itoa(class.ClassNo), user.UserId, string(dataByte))
@@ -49,7 +49,7 @@ func process(conn net.Conn) {
 				userProcess.conn = conn
 				AddOnlineUser(userProcess)
 				onlineNum := GetOnlineUserNum()
-				fmt.Printf("[C][%s]学生%s已登录 机位为%s 当前在线：%d\n", loginMes.UserId, user.UserName, loginMes.Seat, onlineNum)
+				fmt.Printf("[L][%s]学生%s已登录 机位为%s 当前在线：%d\n", loginMes.UserId, user.UserName, loginMes.Seat, onlineNum)
 			}
 
 			//使用json序列化
@@ -70,7 +70,7 @@ func process(conn net.Conn) {
 				dataByte, _ := json.Marshal(userClassData)
 				Rconn.Do("hset", "class"+strconv.Itoa(class.ClassNo), user.UserId, string(dataByte))
 				DelOnlineUser(user.UserId)
-				fmt.Printf("[C][%s]学生%s已离开\n", user.UserId, user.UserName)
+				fmt.Printf("[L][%s]学生%s已离开\n", user.UserId, user.UserName)
 				//使用json序列化
 				dataByte, _ = json.Marshal(logoutResMes)
 				msg.Type = data.LogoutResMesType
@@ -91,6 +91,20 @@ func process(conn net.Conn) {
 			var chatPMes data.ChatPMes
 			json.Unmarshal([]byte(msg.Data), &chatPMes)
 			sendPResMsg(user, chatPMes)
+		case data.QueMesType:
+			var queMes data.QueMes
+			json.Unmarshal([]byte(msg.Data), &queMes)
+			askQueRes(user, queMes, userClassData.Seat)
+		case data.WorkAllMesType:
+			sendWorkAll(conn)
+		case data.WorkMesType:
+			var workMes data.WorkMes
+			json.Unmarshal([]byte(msg.Data), &workMes)
+			sendWorkData(user, conn, workMes)
+		case data.WorkSubMesType:
+			var workSubMes data.WorkSubMes
+			json.Unmarshal([]byte(msg.Data), &workSubMes)
+			sendWorkSub(user, conn, workSubMes)
 		default:
 			fmt.Printf("[W]消息类型为%s 无法处理\n", msg.Type)
 			return

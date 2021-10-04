@@ -25,6 +25,7 @@ func ShowClassMenu() {
 			checkClassData()
 		case 3:
 			fmt.Println("作业数据")
+			checkWorkData()
 		case 4:
 			fmt.Println("退出系统")
 			os.Exit(0)
@@ -58,6 +59,7 @@ func EnterClassMenu() {
 			checkClassData()
 		case 4:
 			fmt.Println("作业数据")
+			checkWorkData()
 		default:
 			fmt.Println("输入有误，请重新选择")
 		}
@@ -85,8 +87,10 @@ func BeginClassMenu() {
 			checkClassData()
 		case 3:
 			fmt.Println("作业数据")
+			checkWorkData()
 		case 4:
 			fmt.Println("发布作业")
+			addWork()
 		case 5:
 			fmt.Println("结束下课")
 			sendMsg("下课啦 请同学们尽快退出登录~")
@@ -103,6 +107,8 @@ func EndClassMenu() {
 		fmt.Println("课程已结束 请提醒同学们尽快退出登录")
 		fmt.Println("建议等待同学们全部退出后再关闭教师端")
 		fmt.Println("1. 退出系统")
+		fmt.Println("2. 课堂数据")
+		fmt.Println("3. 作业数据")
 		fmt.Println("请输入：")
 		var key int
 		fmt.Scanf("%d\n", &key)
@@ -111,6 +117,12 @@ func EndClassMenu() {
 		case 1:
 			fmt.Println("退出系统")
 			os.Exit(0)
+		case 2:
+			fmt.Println("课堂数据")
+			checkClassData()
+		case 3:
+			fmt.Println("作业数据")
+			checkWorkData()
 		default:
 			fmt.Println("输入有误，请重新选择")
 		}

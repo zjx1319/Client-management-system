@@ -47,7 +47,7 @@ func addClass() {
 	Rconn.Do("select", 0)
 }
 
-func selectClass() (err error) {
+func selectClass() {
 
 	//获取课程总数
 	r, err := redis.Int(Rconn.Do("LLEN", "class"))
@@ -84,7 +84,6 @@ func selectClass() (err error) {
 		fmt.Printf("该课程已上%d节 有%d次作业\n", class.ClassNo, class.WorkNo)
 		ShowClassMenu()
 	}
-	return
 }
 
 func enterClass() {
@@ -136,6 +135,10 @@ func endClass() {
 
 func checkClassData() {
 	var key int
+	if class.ClassNo == 0 {
+		fmt.Println("当前没有课程数据")
+		return
+	}
 	fmt.Printf("当前课程有%d个数据 您想看哪节课?\n", class.ClassNo)
 	fmt.Printf("请输入（1-%d）：\n", class.ClassNo)
 	fmt.Scanf("%d\n", &key)

@@ -25,6 +25,7 @@ func ShowClassMenu() {
 			askQue()
 		case 3:
 			fmt.Println("3. 作业中心")
+			getWorkAll()
 		case 4:
 			fmt.Println("4. 个人中心")
 		case 5:

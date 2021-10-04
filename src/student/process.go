@@ -50,7 +50,18 @@ func process() (err error) {
 			var chatPResMes data.ChatPResMes
 			json.Unmarshal([]byte(msg.Data), &chatPResMes)
 			fmt.Printf("[P][%s]%s:%s\n", chatPResMes.SendUserId, chatPResMes.SendUserName, chatPResMes.Content)
-
+		case data.WorkAllResMesType:
+			var workAllResMes data.WorkAllResMes
+			json.Unmarshal([]byte(msg.Data), &workAllResMes)
+			go getWorkData(workAllResMes.Num)
+		case data.WorkResMesType:
+			var workResMes data.WorkResMes
+			json.Unmarshal([]byte(msg.Data), &workResMes)
+			go workDataRes(workResMes)
+		case data.WorkSubResMesType:
+			var workSubResMes data.WorkSubResMes
+			json.Unmarshal([]byte(msg.Data), &workSubResMes)
+			subWorkRes(workSubResMes)
 		default:
 			fmt.Printf("%s 消息类型无法处理\n", msg.Type)
 		}

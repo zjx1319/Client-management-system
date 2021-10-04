@@ -39,6 +39,8 @@ func sendMsg() {
 				tcp.WritePkg(conn, dataByte)
 
 				fmt.Printf("[P][%s][to %s]%s:%s\n", user.UserId, chatPMes.RecieveId, user.UserName, chatPMes.Content)
+			} else if input.Text() == "" {
+				fmt.Println("不能发送空消息哦")
 			} else {
 				//数据处理
 				var chatMes data.ChatMes
@@ -50,7 +52,7 @@ func sendMsg() {
 				//发送数据
 				tcp.WritePkg(conn, dataByte)
 
-				fmt.Printf("[%s]%s:%s\n", user.UserId, user.UserName, chatMes.Content)
+				fmt.Printf("[M][%s]%s:%s\n", user.UserId, user.UserName, chatMes.Content)
 			}
 		}
 	}

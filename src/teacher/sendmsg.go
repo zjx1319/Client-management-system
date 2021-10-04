@@ -36,6 +36,8 @@ func sendMsg(s string) { //本函数参数为空文本进入菜单 非空可直�
 					input.Scan()
 					chatPMes.Content = input.Text()
 					sendPResMsg(teacher, chatPMes)
+				} else if input.Text() == "" {
+					fmt.Println("不能发送空消息哦")
 				} else {
 					sendMsg(input.Text())
 				}

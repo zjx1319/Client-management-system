@@ -1,5 +1,7 @@
 package data
 
+import "time"
+
 const (
 	//登录
 	LoginMesType     = "LoginMes"    //发送
@@ -18,12 +20,69 @@ const (
 	ChatResMesType  = "ChatResMes"
 	ChatPMesType    = "ChatPMes"
 	ChatPResMesType = "ChatPResMes"
+
+	//提问
+	QueMesType = "QueMes"
+
+	//作业
+	WorkAllMesType    = "WorkAllMes" //获取作业数量
+	WorkAllResMesType = "WorkAllResMes"
+	WorkMesType       = "WorkMes" //获取作业信息
+	WorkResMesType    = "WorkResMes"
+	WorkSubMesType    = "WorkSubMes" //作业提交信息
+	WorkSubResMesType = "WorkSubResMes"
+	Work_Objective    = 1 //客观题
+	Work_Subjective   = 2 //主观题
+	Work_Files        = 3 //文件题(在写了)
 )
 
 //消息结构体，含有两个部分,消息的类别和消息的内容
 type Message struct {
 	Type string `json:"type"`
 	Data string `json:"data"`
+}
+
+//消息种类：WorkAllMes
+type WorkAllMes struct {
+}
+
+//消息种类：WorkAllResMes  包含作业总数
+type WorkAllResMes struct {
+	Num int `json:"num"`
+}
+
+//消息种类：WorkMes 作业信息，包含作业ID
+type WorkMes struct {
+	Id int `json:"id"`
+}
+
+//消息种类：WorkResMes 作业信息，包含作业ID、答案、提交时间、分数
+type WorkResMes struct {
+	Id         int       `json:"id"`
+	Type       int       `json:"type"`
+	Question   string    `json:"question"`
+	Answer     string    `json:"answer"` //如果答案为空则未提交
+	SubmitTime time.Time `json:"submitTime"`
+	DeadLine   time.Time `json:"deadLine"`
+	Score      int       `json:"score"`
+	FullScore  int       `json:"fullScore"`
+}
+
+//消息种类：WorkSubMes 作业提交信息，包含作业ID、答案
+type WorkSubMes struct {
+	Id     int    `json:"id"`
+	Answer string `json:"answer"`
+}
+
+//消息种类：WorkSubResMes 作业提交信息，包含作业ID、分数（客观题）
+type WorkSubResMes struct {
+	Id    int `json:"id"`
+	Score int `json:"score"`
+}
+
+//消息种类：QueMes 提问信息，包含提问内容
+type QueMes struct {
+	Content string `json:"content"`
 }
 
 //消息种类：ChatMes 聊天消息，包含消息内容

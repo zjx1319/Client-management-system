@@ -27,3 +27,11 @@ type UserClassData struct {
 	LeaveTime   time.Time `json:"leaveTime"`
 	Seat        string    `json:"seat"`
 }
+
+//用户作业数据
+type UserWorkData struct {
+	UserId     string    `json:"userId"`
+	Answer     string    `json:"answer"`
+	SubmitTime time.Time `json:"submitTime"`
+	Score      int       `json:"score"`
+}
