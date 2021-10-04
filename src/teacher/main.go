@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"src/config"
 	"src/data"
 
 	"github.com/garyburd/redigo/redis"
@@ -14,7 +15,8 @@ var classData data.ClassData
 
 func init() {
 	//当服务器启动时，连接redis
-	Rconn, _ = redis.Dial("tcp", "127.0.0.1:6379")
+	Rconn, _ = redis.Dial("tcp", config.RedisIp)
+
 	//defer conn.Close()
 }
 

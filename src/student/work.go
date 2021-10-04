@@ -24,7 +24,6 @@ func getWorkAll() {
 		time.Sleep(time.Second)
 		//等待教师端返回数据
 	}
-	return
 }
 
 func getWorkData(num int) {
@@ -49,7 +48,6 @@ func getWorkData(num int) {
 	dataByte, _ = json.Marshal(msg)
 	//发送数据
 	tcp.WritePkg(conn, dataByte)
-	return
 }
 
 func workDataRes(workResMes data.WorkResMes) {
@@ -93,6 +91,6 @@ func workDataRes(workResMes data.WorkResMes) {
 func subWorkRes(workSubResMes data.WorkSubResMes) {
 	fmt.Printf("作业%d提交成功 得分%d\n", workSubResMes.Id, workSubResMes.Score)
 	if workSubResMes.Score == 0 {
-		fmt.Println("得分为0可能是提交超时或主观题未评分")
+		fmt.Println("得分为0可能是提交超时或主观题未评分或客观题做错啦")
 	}
 }
