@@ -2,8 +2,10 @@ package main
 
 import (
 	"bufio"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"os"
 	"src/data"
@@ -17,9 +19,9 @@ import (
 func addWork() {
 	var workData data.WorkData
 
-	fmt.Println("请选择题目类型（1是客观题 2是主观题）：")
+	fmt.Println("请选择题目类型（1是客观题 2是主观题 3是文件题）：")
 	fmt.Scanf("%d\n", &workData.Type)
-	if workData.Type < 1 || workData.Type > 2 {
+	if workData.Type < 1 || workData.Type > 3 {
 		fmt.Println("您输入的类型错误！")
 		return
 	}
@@ -79,6 +81,8 @@ func checkWorkData() {
 		fmt.Print("题目类型：客观题 ")
 	case data.Work_Subjective:
 		fmt.Print("题目类型：主观题 ")
+	case data.Work_Files:
+		fmt.Print("题目类型：文件题 ")
 	default:
 		fmt.Print("题目类型：未知 ") //Error
 	}
@@ -193,13 +197,22 @@ func sendWorkSub(user data.User, conn net.Conn, workSubMes data.WorkSubMes) {
 	res, _ := redis.String(Rconn.Do("hget", "work"+strconv.Itoa(workSubResMes.Id), "workData"))
 	var wData data.WorkData
 	json.Unmarshal([]byte(res), &wData)
+	//文件题先写出文件并把答案改成文件目录
+	if wData.Type == data.Work_Files {
+		var fileMes data.FileMes
+		json.Unmarshal([]byte(workSubMes.Answer), &fileMes)
+		os.MkdirAll("work/"+strconv.Itoa(workSubResMes.Id)+"/"+user.UserId, 0777)
+		fileName := "work/" + strconv.Itoa(workSubResMes.Id) + "/" + user.UserId + "/" + fileMes.FileName
+		dataByte, _ = base64.StdEncoding.DecodeString(fileMes.Data)
+		ioutil.WriteFile(fileName, dataByte, 0777)
+		uwData.Answer = "work/" + strconv.Itoa(workSubResMes.Id) + "/" + user.UserId + "/" + fileMes.FileName
+	}
+
 	//如果是客观题自动改分
-	if wData.Type == data.Work_Objective {
-		if wData.StdAnswer == workSubMes.Answer {
-			score = wData.FullScore
-		} else {
-			score = 0
-		}
+	if wData.Type == data.Work_Objective && wData.StdAnswer == workSubMes.Answer {
+		score = wData.FullScore
+	} else {
+		score = 0
 	}
 	//判断提交是否超时
 	if uwData.SubmitTime.After(wData.DeadLine) {

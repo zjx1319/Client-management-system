@@ -2,9 +2,12 @@ package main
 
 import (
 	"bufio"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"src/data"
 	"src/tcp"
 	"time"
@@ -57,6 +60,8 @@ func workDataRes(workResMes data.WorkResMes) {
 		fmt.Print("题目类型：客观题 ")
 	case data.Work_Subjective:
 		fmt.Print("题目类型：主观题 ")
+	case data.Work_Files:
+		fmt.Print("题目类型：文件题 ")
 	default:
 		fmt.Print("题目类型：未知 ") //Error
 	}
@@ -67,22 +72,56 @@ func workDataRes(workResMes data.WorkResMes) {
 		fmt.Printf("你的答案：%s\n得分：%d 提交时间：%s\n", workResMes.Answer, workResMes.Score,
 			workResMes.SubmitTime.Format("2006-01-02 15:04:05"))
 	} else {
-		fmt.Println("要提交答案请直接输入 不输入直接回车可返回主菜单")
-		input := bufio.NewScanner(os.Stdin)
-		input.Scan()
-		if input.Text() != "" {
-			var workSubMes data.WorkSubMes
-			var msg data.Message
-			var dataByte []byte
-			msg.Type = data.WorkSubMesType
-			workSubMes.Id = workResMes.Id
-			workSubMes.Answer = input.Text()
-			dataByte, _ = json.Marshal(workSubMes)
-			msg.Data = string(dataByte)
-			dataByte, _ = json.Marshal(msg)
-			//发送数据
-			tcp.WritePkg(conn, dataByte)
-			fmt.Println("作业已提交")
+		if workResMes.Type != data.Work_Files {
+			fmt.Println("要提交答案请直接输入 不输入直接回车可返回主菜单")
+			input := bufio.NewScanner(os.Stdin)
+			input.Scan()
+			if input.Text() != "" {
+				var workSubMes data.WorkSubMes
+				var msg data.Message
+				var dataByte []byte
+				msg.Type = data.WorkSubMesType
+				workSubMes.Id = workResMes.Id
+				workSubMes.Answer = input.Text()
+				dataByte, _ = json.Marshal(workSubMes)
+				msg.Data = string(dataByte)
+				dataByte, _ = json.Marshal(msg)
+				//发送数据
+				tcp.WritePkg(conn, dataByte)
+				fmt.Println("作业已提交")
+			}
+		} else {
+			//文件提交
+			fmt.Println("文件题要提交答案请输入文件路径（不带引号 不超过5M） 不输入直接回车可返回主菜单")
+			input := bufio.NewScanner(os.Stdin)
+			input.Scan()
+			if input.Text() != "" {
+				var workSubMes data.WorkSubMes
+				var msg data.Message
+				var dataByte []byte
+				msg.Type = data.WorkSubMesType
+				workSubMes.Id = workResMes.Id
+				//读取文件
+				f, err := ioutil.ReadFile(input.Text())
+				if err != nil {
+					fmt.Println("文件读取出错 提交失败")
+				} else if len(f) > 5242880 {
+					fmt.Println("文件过大 请提交5M以下的文件")
+				} else {
+					var fileMes data.FileMes
+					fileMes.FileName = filepath.Base(input.Text())
+					fileMes.Data = base64.StdEncoding.EncodeToString(f)
+					dataByte, _ = json.Marshal(fileMes)
+					workSubMes.Answer = string(dataByte)
+					dataByte, _ = json.Marshal(workSubMes)
+					msg.Data = string(dataByte)
+					dataByte, _ = json.Marshal(msg)
+					//发送数据
+					tcp.WritePkg(conn, dataByte)
+					fmt.Println("作业已提交")
+				}
+
+			}
 		}
 	}
 	flag = false
@@ -91,6 +130,6 @@ func workDataRes(workResMes data.WorkResMes) {
 func subWorkRes(workSubResMes data.WorkSubResMes) {
 	fmt.Printf("作业%d提交成功 得分%d\n", workSubResMes.Id, workSubResMes.Score)
 	if workSubResMes.Score == 0 {
-		fmt.Println("得分为0可能是提交超时或主观题未评分或客观题做错啦")
+		fmt.Println("得分为0可能是提交超时或未评分或客观题做错啦")
 	}
 }

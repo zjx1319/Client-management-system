@@ -10,7 +10,7 @@ import (
 
 func ReadPkg(conn net.Conn) (mes data.Message, err error) {
 
-	dataByte := make([]byte, 8096)
+	dataByte := make([]byte, 10000000)
 	_, err = conn.Read(dataByte[:4])
 	if err != nil {
 		return
@@ -18,6 +18,10 @@ func ReadPkg(conn net.Conn) (mes data.Message, err error) {
 
 	pkgLen := binary.BigEndian.Uint32(dataByte[0:4])
 	//根据 pkgLen 读取消息内容
+	if pkgLen > 9999999 {
+		//数据超长了
+		return
+	}
 	n, err := conn.Read(dataByte[:pkgLen])
 	if n != int(pkgLen) || err != nil {
 		return

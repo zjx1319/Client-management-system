@@ -33,7 +33,7 @@ const (
 	WorkSubResMesType = "WorkSubResMes"
 	Work_Objective    = 1 //客观题
 	Work_Subjective   = 2 //主观题
-	Work_Files        = 3 //文件题(在写了)
+	Work_Files        = 3 //文件题
 )
 
 //消息结构体，含有两个部分,消息的类别和消息的内容
@@ -72,6 +72,11 @@ type WorkResMes struct {
 type WorkSubMes struct {
 	Id     int    `json:"id"`
 	Answer string `json:"answer"`
+}
+
+type FileMes struct {
+	FileName string `json:"fileName"`
+	Data     string `json:"data"` //使用base64编码
 }
 
 //消息种类：WorkSubResMes 作业提交信息，包含作业ID、分数（客观题）
