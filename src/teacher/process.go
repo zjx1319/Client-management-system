@@ -47,7 +47,7 @@ func process(conn net.Conn) {
 				Rconn.Do("hset", "class"+strconv.Itoa(class.ClassNo), user.UserId, string(dataByte))
 				userProcess.userData = user
 				userProcess.conn = conn
-				AddOnlineUser(userProcess)
+				AddOnlineUser(&userProcess)
 				onlineNum := GetOnlineUserNum()
 				fmt.Printf("[L][%s]学生%s已登录 机位为%s 当前在线：%d\n", loginMes.UserId, user.UserName, loginMes.Seat, onlineNum)
 			}
@@ -105,6 +105,14 @@ func process(conn net.Conn) {
 			var workSubMes data.WorkSubMes
 			json.Unmarshal([]byte(msg.Data), &workSubMes)
 			sendWorkSub(user, conn, workSubMes)
+		case data.ScreenReportType:
+			var screenReport data.ScreenReport
+			json.Unmarshal([]byte(msg.Data), &screenReport)
+			userMgr[user.UserId].screenUnchangeTime = screenReport.UnchangeTime
+			if screenReport.UnchangeTime > 2 {
+				fmt.Printf("[I][%s]学生%s屏幕内容已连续%d分钟未改变\n", user.UserId, user.UserName, screenReport.UnchangeTime)
+			}
+
 		default:
 			fmt.Printf("[W]消息类型为%s 无法处理\n", msg.Type)
 			return

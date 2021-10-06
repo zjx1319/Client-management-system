@@ -70,10 +70,11 @@ func BeginClassMenu() {
 	for {
 		fmt.Println("------------------")
 		fmt.Println("1. 发送消息")
-		fmt.Println("2. 课堂数据")
-		fmt.Println("3. 作业数据")
-		fmt.Println("4. 发布作业")
-		fmt.Println("5. 结束下课")
+		fmt.Println("2. 查看屏幕")
+		fmt.Println("3. 课堂数据")
+		fmt.Println("4. 作业数据")
+		fmt.Println("5. 发布作业")
+		fmt.Println("6. 结束下课")
 		fmt.Println("请输入：")
 		var key int
 		fmt.Scanf("%d\n", &key)
@@ -83,15 +84,18 @@ func BeginClassMenu() {
 			fmt.Println("发送消息")
 			sendMsg("")
 		case 2:
+			fmt.Println("查看屏幕")
+			checkScreen()
+		case 3:
 			fmt.Println("课堂数据")
 			checkClassData()
-		case 3:
+		case 4:
 			fmt.Println("作业数据")
 			checkWorkData()
-		case 4:
+		case 5:
 			fmt.Println("发布作业")
 			addWork()
-		case 5:
+		case 6:
 			fmt.Println("结束下课")
 			sendMsg("下课啦 请同学们尽快退出登录~")
 			endClass()

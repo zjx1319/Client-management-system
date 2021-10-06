@@ -34,12 +34,37 @@ const (
 	Work_Objective    = 1 //客观题
 	Work_Subjective   = 2 //主观题
 	Work_Files        = 3 //文件题
+
+	//屏幕相关
+	ScreenReportType  = "ScreenReport"  //屏幕内容报告
+	ScreenShotGetType = "ScreenShotGet" //获取屏幕截图
+	ScreenShotResType = "ScreenShotRes" //返回屏幕截图
+
 )
 
 //消息结构体，含有两个部分,消息的类别和消息的内容
 type Message struct {
 	Type string `json:"type"`
 	Data string `json:"data"`
+}
+
+type FileMes struct {
+	FileName string `json:"fileName"`
+	Data     string `json:"data"` //使用base64编码
+}
+
+//消息种类：ScreenReport 包含屏幕内容未改变时长（单位分钟）
+type ScreenReport struct {
+	UnchangeTime int `json:"unchangeTime"`
+}
+
+//消息种类：ScreenShotGet
+type ScreenShotGet struct {
+}
+
+//消息种类：ScreenShotRes 包含屏幕截图
+type ScreenShotRes struct {
+	Img string `json:"img"` //使用base64编码
 }
 
 //消息种类：WorkAllMes
@@ -72,11 +97,6 @@ type WorkResMes struct {
 type WorkSubMes struct {
 	Id     int    `json:"id"`
 	Answer string `json:"answer"`
-}
-
-type FileMes struct {
-	FileName string `json:"fileName"`
-	Data     string `json:"data"` //使用base64编码
 }
 
 //消息种类：WorkSubResMes 作业提交信息，包含作业ID、分数（客观题）

@@ -5,19 +5,20 @@ import (
 	"src/data"
 )
 
-var userMgr map[string]UserProcess
+var userMgr map[string]*UserProcess
 
 type UserProcess struct {
-	userData data.User
-	conn     net.Conn
+	userData           data.User
+	screenUnchangeTime int
+	conn               net.Conn
 }
 
 func init() {
-	userMgr = make(map[string]UserProcess)
+	userMgr = make(map[string]*UserProcess)
 }
 
 //添加
-func AddOnlineUser(user UserProcess) {
+func AddOnlineUser(user *UserProcess) {
 	userMgr[user.userData.UserId] = user
 }
 
@@ -27,7 +28,7 @@ func DelOnlineUser(userId string) {
 }
 
 //根据id返回对应的值
-func GetOnlineUserById(userId string) (up UserProcess) {
+func GetOnlineUserById(userId string) (up *UserProcess) {
 	up = userMgr[userId]
 	return
 }

@@ -56,6 +56,8 @@ func login() (err error) {
 		fmt.Printf("当前课程为：%s \n", loginResMes.ClassName)
 		//启动消息接收线程
 		go process()
+		//启动屏幕内容检测线程
+		go screenCheckProcess()
 		//显示菜单
 		ShowClassMenu()
 	}
