@@ -6,12 +6,16 @@ import (
 	"encoding/json"
 	"image"
 	"image/png"
+	"net"
+	"src/config"
 	"src/data"
 	"src/tcp"
 	"time"
 
 	"github.com/kbinani/screenshot"
 )
+
+var VideoFlag bool = false
 
 //发送屏幕截图
 func sendScreenShot() {
@@ -68,4 +72,24 @@ func imgCompare(img1, img2 *image.RGBA) (result int) {
 	}
 	result = result / imgSize
 	return
+}
+
+func sendScreenVideo() {
+	var msg data.Message
+	msg.Type = data.ScreenVideoResType
+	var screenVideoRes data.ScreenVideoRes
+	for VideoFlag {
+		img, _ := screenshot.CaptureDisplay(0)
+		buf := new(bytes.Buffer)
+		png.Encode(buf, img)
+		imgByte := buf.Bytes()
+		screenVideoRes.Img = base64.StdEncoding.EncodeToString(imgByte)
+		dataByte, _ := json.Marshal(screenVideoRes)
+		msg.Data = string(dataByte)
+		dataByte, _ = json.Marshal(msg)
+		//新建连接 主要是避免粘包
+		videoConn, _ := net.Dial("tcp", config.Server)
+		tcp.WritePkg(videoConn, dataByte)
+		time.Sleep(time.Millisecond * 100)
+	}
 }

@@ -1,0 +1,8 @@
+<SCRIPT LANGUAGE="JavaScript">
+	function Refresh(){
+	document.getElementById('myImg').src = "ScreenVideo.png?"+Math.random();
+	//加random主要是防止缓存
+	}
+	setInterval('Refresh()',100); 
+	</SCRIPT>
+	<img src="ScreenVideo.png" id="myImg"/>

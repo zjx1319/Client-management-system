@@ -17,6 +17,8 @@ func process(conn net.Conn) {
 	var userClassData data.UserClassData
 	var userProcess UserProcess
 	for {
+		time.Sleep(time.Millisecond * 100)
+		//延迟一下 确保ReadPkg能读到完整数据
 		msg, err := tcp.ReadPkg(conn)
 		if err != nil {
 			//出现错误 掉线了
@@ -27,6 +29,9 @@ func process(conn net.Conn) {
 				Rconn.Do("hset", "class"+strconv.Itoa(class.ClassNo), user.UserId, string(dataByte))
 				DelOnlineUser(user.UserId)
 			}
+			return
+		}
+		if msg.Type == "" {
 			return
 		}
 		switch msg.Type {
@@ -116,8 +121,14 @@ func process(conn net.Conn) {
 			var screenShotRes data.ScreenShotRes
 			json.Unmarshal([]byte(msg.Data), &screenShotRes)
 			viewScreenShot(user, screenShotRes)
+		case data.ScreenVideoResType:
+			var screenVideoRes data.ScreenVideoRes
+			json.Unmarshal([]byte(msg.Data), &screenVideoRes)
+			viewScreenVideo(screenVideoRes)
+			conn.Close()
+			return
 		default:
-			fmt.Printf("[W]消息类型为%s 无法处理\n", msg.Type)
+			fmt.Printf("[W]连接%s的消息类型为%s 无法处理\n", conn.RemoteAddr().String(), msg.Type)
 			return
 		}
 	}

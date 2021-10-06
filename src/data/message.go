@@ -36,10 +36,12 @@ const (
 	Work_Files        = 3 //文件题
 
 	//屏幕相关
-	ScreenReportType  = "ScreenReport"  //屏幕内容报告
-	ScreenShotGetType = "ScreenShotGet" //获取屏幕截图
-	ScreenShotResType = "ScreenShotRes" //返回屏幕截图
-
+	ScreenReportType     = "ScreenReport"  //屏幕内容报告
+	ScreenShotGetType    = "ScreenShotGet" //获取屏幕截图
+	ScreenShotResType    = "ScreenShotRes" //返回屏幕截图
+	ScreenVideoStartType = "ScreenVideoStart"
+	ScreenVideoStopType  = "ScreenVideoStop"
+	ScreenVideoResType   = "ScreenVideoRes"
 )
 
 //消息结构体，含有两个部分,消息的类别和消息的内容
@@ -51,6 +53,11 @@ type Message struct {
 type FileMes struct {
 	FileName string `json:"fileName"`
 	Data     string `json:"data"` //使用base64编码
+}
+
+//消息种类：ScreenVideoRes 包含屏幕图片
+type ScreenVideoRes struct {
+	Img string `json:"img"` //使用base64编码
 }
 
 //消息种类：ScreenReport 包含屏幕内容未改变时长（单位分钟）

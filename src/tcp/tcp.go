@@ -20,6 +20,7 @@ func ReadPkg(conn net.Conn) (mes data.Message, err error) {
 	//根据 pkgLen 读取消息内容
 	if pkgLen > 9999999 {
 		//数据超长了
+		fmt.Printf("收到长度为%d的数据包 无法处理\n", pkgLen)
 		return
 	}
 	n, err := conn.Read(dataByte[:pkgLen])

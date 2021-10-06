@@ -64,6 +64,11 @@ func process() (err error) {
 			subWorkRes(workSubResMes)
 		case data.ScreenShotGetType:
 			sendScreenShot()
+		case data.ScreenVideoStartType:
+			VideoFlag = true
+			go sendScreenVideo()
+		case data.ScreenVideoStopType:
+			VideoFlag = false
 		default:
 			fmt.Printf("%s 消息类型无法处理\n", msg.Type)
 		}
