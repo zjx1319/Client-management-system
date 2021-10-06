@@ -62,6 +62,8 @@ func process() (err error) {
 			var workSubResMes data.WorkSubResMes
 			json.Unmarshal([]byte(msg.Data), &workSubResMes)
 			subWorkRes(workSubResMes)
+		case data.ScreenShotGetType:
+			sendScreenShot()
 		default:
 			fmt.Printf("%s 消息类型无法处理\n", msg.Type)
 		}

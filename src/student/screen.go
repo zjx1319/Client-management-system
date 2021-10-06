@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"image"
+	"image/png"
 	"src/data"
 	"src/tcp"
 	"time"
@@ -12,7 +15,18 @@ import (
 
 //发送屏幕截图
 func sendScreenShot() {
-
+	var msg data.Message
+	msg.Type = data.ScreenShotResType
+	var screenShotRes data.ScreenShotRes
+	img, _ := screenshot.CaptureDisplay(0)
+	buf := new(bytes.Buffer)
+	png.Encode(buf, img)
+	imgByte := buf.Bytes()
+	screenShotRes.Img = base64.StdEncoding.EncodeToString(imgByte)
+	dataByte, _ := json.Marshal(screenShotRes)
+	msg.Data = string(dataByte)
+	dataByte, _ = json.Marshal(msg)
+	tcp.WritePkg(conn, dataByte)
 }
 
 //循环截图并比较屏幕内容

@@ -112,7 +112,10 @@ func process(conn net.Conn) {
 			if screenReport.UnchangeTime > 2 {
 				fmt.Printf("[I][%s]学生%s屏幕内容已连续%d分钟未改变\n", user.UserId, user.UserName, screenReport.UnchangeTime)
 			}
-
+		case data.ScreenShotResType:
+			var screenShotRes data.ScreenShotRes
+			json.Unmarshal([]byte(msg.Data), &screenShotRes)
+			viewScreenShot(user, screenShotRes)
 		default:
 			fmt.Printf("[W]消息类型为%s 无法处理\n", msg.Type)
 			return
