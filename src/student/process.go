@@ -69,6 +69,10 @@ func process() (err error) {
 			go sendScreenVideo()
 		case data.ScreenVideoStopType:
 			VideoFlag = false
+		case data.BlockListProcessType:
+			var blockListProcess data.BlockListProcess
+			json.Unmarshal([]byte(msg.Data), &blockListProcess)
+			go blockListCheckProcess(blockListProcess.List)
 		default:
 			fmt.Printf("%s 消息类型无法处理\n", msg.Type)
 		}

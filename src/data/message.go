@@ -42,6 +42,9 @@ const (
 	ScreenVideoStartType = "ScreenVideoStart"
 	ScreenVideoStopType  = "ScreenVideoStop"
 	ScreenVideoResType   = "ScreenVideoRes"
+
+	//黑名单相关
+	BlockListProcessType = "BlockListProcess"
 )
 
 //消息结构体，含有两个部分,消息的类别和消息的内容
@@ -53,6 +56,11 @@ type Message struct {
 type FileMes struct {
 	FileName string `json:"fileName"`
 	Data     string `json:"data"` //使用base64编码
+}
+
+//消息种类：BlockListProcess 包含黑名单进程名
+type BlockListProcess struct {
+	List []string `json:"blockListProcess"`
 }
 
 //消息种类：ScreenVideoRes 包含屏幕图片

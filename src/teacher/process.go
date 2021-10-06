@@ -65,6 +65,10 @@ func process(conn net.Conn) {
 
 			//发送消息给客户
 			tcp.WritePkg(conn, []byte(dataByte))
+
+			if loginResMes.Result == data.Logout_Success {
+				go sendBlockList(conn)
+			}
 		case data.LogoutMesType: //处理注销
 			var logoutMes data.LogoutMes
 			json.Unmarshal([]byte(msg.Data), &logoutMes)
