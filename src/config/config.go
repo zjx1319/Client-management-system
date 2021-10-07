@@ -4,8 +4,8 @@ import "time"
 
 const (
 	//Student
-	Server string = "localhost:8989" //服务端ip和端口
-	//Server string = "192.168.123.50:8989" //服务端ip和端口
+	//Server string = "localhost:8989" //服务端ip和端口
+	Server string = "192.168.177.1:8989" //服务端ip和端口
 
 	//Teacher
 	SerPoint         string        = "8989" //服务端端口
@@ -15,4 +15,4 @@ const (
 	RedisIdleTimeout time.Duration = time.Second * 300 // 最大空闲时间
 )
 
-var Seat string = "seat01" //机位
+var Seat string = "seat" //机位

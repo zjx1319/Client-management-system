@@ -19,8 +19,6 @@ func process(conn net.Conn) {
 	var userClassData data.UserClassData
 	var userProcess UserProcess
 	for {
-		//time.Sleep(time.Millisecond * 100)
-		////延迟一下 确保ReadPkg能读到完整数据
 		msg, err := tcp.ReadPkg(conn)
 		if err != nil {
 			//出现错误 掉线了

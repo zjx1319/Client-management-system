@@ -22,6 +22,9 @@ func main() {
 		config.Seat = com[3]
 		login()
 	}
+	if len(com) == 2 {
+		config.Seat = com[1]
+	}
 
 	for {
 		color.Cyan("欢迎使用电子教室管理系统学生端")
