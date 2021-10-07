@@ -2,11 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
-	"io"
 	"os"
 	"src/data"
 	"src/tcp"
+
+	"github.com/fatih/color"
 )
 
 //处理和客户端的通讯
@@ -15,14 +15,7 @@ func process() (err error) {
 		var msg data.Message
 		msg, err = tcp.ReadPkg(conn)
 		if err != nil {
-			// 通常遇到的错误是连接中断或被关闭，用io.EOF表示
-			if err == io.EOF {
-				if user.UserName != "" {
-					fmt.Println("异常掉线！请重新登录！")
-				}
-			} else {
-				fmt.Println(err)
-			}
+			color.Red("连接中断！请重新登录！\n")
 			return
 		}
 		switch msg.Type {
@@ -33,23 +26,23 @@ func process() (err error) {
 			json.Unmarshal([]byte(msg.Data), &logoutResMes)
 			if logoutResMes.Result == data.Logout_Success {
 				conn.Close()
-				fmt.Println("已退出课堂")
+				color.Cyan("已退出课堂")
 				os.Exit(0)
 			} else {
-				fmt.Printf("注销失败 返回信息%s\n", logoutResMes.Result)
+				color.Red("注销失败 返回信息%s\n", logoutResMes.Result)
 			}
 		case data.ChatResMesType:
 			//接收到消息
 			//使用json序列化
 			var chatResMes data.ChatResMes
 			json.Unmarshal([]byte(msg.Data), &chatResMes)
-			fmt.Printf("[M][%s]%s:%s\n", chatResMes.SendUserId, chatResMes.SendUserName, chatResMes.Content)
+			color.HiBlue("[Message][%s]%s:%s\n", chatResMes.SendUserId, chatResMes.SendUserName, chatResMes.Content)
 		case data.ChatPResMesType:
 			//接收到私聊消息
 			//使用json序列化
 			var chatPResMes data.ChatPResMes
 			json.Unmarshal([]byte(msg.Data), &chatPResMes)
-			fmt.Printf("[P][%s]%s:%s\n", chatPResMes.SendUserId, chatPResMes.SendUserName, chatPResMes.Content)
+			color.HiMagenta("[Private][%s]%s:%s\n", chatPResMes.SendUserId, chatPResMes.SendUserName, chatPResMes.Content)
 		case data.WorkAllResMesType:
 			var workAllResMes data.WorkAllResMes
 			json.Unmarshal([]byte(msg.Data), &workAllResMes)
@@ -78,7 +71,7 @@ func process() (err error) {
 			json.Unmarshal([]byte(msg.Data), &BlockListWeb)
 			go blockListWeb(BlockListWeb.List)
 		default:
-			fmt.Printf("%s 消息类型无法处理\n", msg.Type)
+			color.Red("%s 消息类型无法处理\n", msg.Type)
 		}
 	}
 }

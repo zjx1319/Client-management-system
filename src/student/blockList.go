@@ -2,13 +2,14 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os/exec"
 	"src/data"
 	"src/tcp"
 	"strings"
 	"time"
+
+	"github.com/fatih/color"
 )
 
 var WebBlockList []string
@@ -26,7 +27,7 @@ func blockListCheckProcess(blockList []string) {
 				dataByte, _ = json.Marshal(msg)
 				//发送数据
 				tcp.WritePkg(conn, dataByte)
-				fmt.Println("发现黑名单进程：" + blockList[i])
+				color.Yellow("发现黑名单进程：%s\n", blockList[i])
 				exec.Command("taskkill", "/IM", blockList[i]).Run()
 			}
 		}
@@ -51,7 +52,7 @@ func blockListWeb(blockList []string) {
 }
 
 func blockListWebCheck(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("请不要访问本网址!"))
+	w.Write([]byte("上课期间请不要访问本网址!"))
 	for i := range WebBlockList {
 		if strings.Contains(r.RequestURI, "favicon.ico") && strings.Contains(r.Host, WebBlockList[i]) {
 			var blockListReport data.BlockListReport
@@ -63,7 +64,7 @@ func blockListWebCheck(w http.ResponseWriter, r *http.Request) {
 			dataByte, _ = json.Marshal(msg)
 			//发送数据
 			tcp.WritePkg(conn, dataByte)
-			fmt.Println("发现黑名单网站：" + WebBlockList[i])
+			color.Yellow("发现黑名单网站：%s\n" + WebBlockList[i])
 		}
 	}
 }

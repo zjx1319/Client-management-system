@@ -13,42 +13,45 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/garyburd/redigo/redis"
 )
 
 func addWork() {
 	var workData data.WorkData
 
-	fmt.Println("请选择题目类型（1是客观题 2是主观题 3是文件题）：")
+	color.Cyan("请选择题目类型（1是客观题 2是主观题 3是文件题）：\n")
 	fmt.Scanf("%d\n", &workData.Type)
 	if workData.Type < 1 || workData.Type > 3 {
-		fmt.Println("您输入的类型错误！")
+		color.Cyan("您输入的类型错误！\n")
 		return
 	}
 	input := bufio.NewScanner(os.Stdin)
-	fmt.Println("请输入题目：")
+	color.Cyan("请输入题目：\n")
 	input.Scan()
 	workData.Question = input.Text()
-	fmt.Println("请输入参考答案（客观题会自动打分）：")
+	color.Cyan("请输入参考答案（客观题会自动打分）：\n")
 	input.Scan()
 	workData.StdAnswer = input.Text()
-	fmt.Println("请输入题目分值：")
+	color.Cyan("请输入题目分值：\n")
 	fmt.Scanf("%d\n", &workData.FullScore)
-	fmt.Println("您想在多久后截止提交？（输入整数 单位分钟）")
+	color.Cyan("您想在多久后截止提交？（输入整数 单位分钟）\n")
 	var ddlm int
 	fmt.Scanf("%d\n", &ddlm)
 	timeAdd, _ := time.ParseDuration(strconv.Itoa(ddlm) + "m")
 	workData.DeadLine = time.Now().Add(timeAdd)
 
 	//作业次数+1 数据库信息处理
+	rconn := RconnPool.Get()
+	defer rconn.Close()
 	class.WorkNo++
 	dataByte, _ := json.Marshal(class)
-	Rconn.Do("set", "classData", string(dataByte))
+	rconn.Do("set", "classData", string(dataByte))
 
 	workData.Id = class.WorkNo
 
 	dataByte, _ = json.Marshal(workData)
-	Rconn.Do("hset", "work"+strconv.Itoa(workData.Id), "workData", string(dataByte))
+	rconn.Do("hset", "work"+strconv.Itoa(workData.Id), "workData", string(dataByte))
 
 	//作业添加成功
 	sendMsg("新的作业已发布，Id为" + strconv.Itoa(workData.Id) + " 请在" +
@@ -58,44 +61,46 @@ func addWork() {
 func checkWorkData() {
 	var key int
 	if class.WorkNo == 0 {
-		fmt.Println("当前没有作业数据")
+		color.Cyan("当前没有作业数据\n")
 		return
 	}
-	fmt.Printf("当前课程有%d个作业数据 您想看哪个作业?\n", class.WorkNo)
-	fmt.Printf("请输入（1-%d）：\n", class.WorkNo)
+	color.Cyan("当前课程有%d个作业数据 您想看哪个作业?\n", class.WorkNo)
+	color.Cyan("请输入（1-%d）：\n", class.WorkNo)
 	fmt.Scanf("%d\n", &key)
 	if key < 1 || key > class.WorkNo {
-		fmt.Println("没有这个作业的数据")
+		color.Cyan("没有这个作业的数据")
 		return
 	}
 
-	res, _ := redis.String(Rconn.Do("hget", "work"+strconv.Itoa(key), "workData"))
+	rconn := RconnPool.Get()
+	defer rconn.Close()
+	res, _ := redis.String(rconn.Do("hget", "work"+strconv.Itoa(key), "workData"))
 	var wData data.WorkData
 	var uData data.User
 	var uwData data.UserWorkData
 	json.Unmarshal([]byte(res), &wData)
 	//输出题目信息
-	fmt.Printf("你查询的作业Id为%d\n", wData.Id)
+	color.Cyan("你查询的作业Id为%d\n", wData.Id)
 	switch wData.Type {
 	case data.Work_Objective:
-		fmt.Print("题目类型：客观题 ")
+		color.Cyan("题目类型：客观题 ")
 	case data.Work_Subjective:
-		fmt.Print("题目类型：主观题 ")
+		color.Cyan("题目类型：主观题 ")
 	case data.Work_Files:
-		fmt.Print("题目类型：文件题 ")
+		color.Cyan("题目类型：文件题 ")
 	default:
-		fmt.Print("题目类型：未知 ") //Error
+		color.Cyan("题目类型：未知 ") //Error
 	}
-	fmt.Printf("满分：%d 截止时间：%s\n", wData.FullScore, wData.DeadLine.Format("2006-01-02 15:04:05"))
-	fmt.Printf("题目：%s\n", wData.Question)
-	fmt.Printf("参考答案：%s\n", wData.StdAnswer)
+	color.Cyan("满分：%d 截止时间：%s\n", wData.FullScore, wData.DeadLine.Format("2006-01-02 15:04:05"))
+	color.Cyan("题目：%s\n", wData.Question)
+	color.Cyan("参考答案：%s\n", wData.StdAnswer)
 	//输出学生答题信息
-	fmt.Println("学号\t姓名\t得分\t提交时间\t\t答案")
-	uDatas, _ := redis.Strings(Rconn.Do("hkeys", "userData"))
+	color.Cyan("学号\t姓名\t得分\t提交时间\t\t答案\n")
+	uDatas, _ := redis.Strings(rconn.Do("hkeys", "userData"))
 	for uId := range uDatas {
-		res, _ = redis.String(Rconn.Do("hget", "userData", uDatas[uId]))
+		res, _ = redis.String(rconn.Do("hget", "userData", uDatas[uId]))
 		json.Unmarshal([]byte(res), &uData)
-		res, err := redis.String(Rconn.Do("hget", "work"+strconv.Itoa(key), uDatas[uId]))
+		res, err := redis.String(rconn.Do("hget", "work"+strconv.Itoa(key), uDatas[uId]))
 		if err == redis.ErrNil {
 			//课程中没有这个学生的数据 0分!
 			fmt.Printf("%s\t%s\t0\t未提交\n", uData.UserId, uData.UserName)
@@ -106,7 +111,7 @@ func checkWorkData() {
 		}
 	}
 	//输出学生数据完成
-	fmt.Println("您可以输入“学号 分数”进行批改 输入“0 0”返回菜单")
+	color.Cyan("您可以输入“[学号] [分数]”进行批改 输入“0 0”返回菜单")
 	var id string
 	var score int
 	for {
@@ -114,7 +119,7 @@ func checkWorkData() {
 		if id == "0" && score == 0 {
 			return
 		} else {
-			res, err := redis.String(Rconn.Do("hget", "work"+strconv.Itoa(key), id))
+			res, err := redis.String(rconn.Do("hget", "work"+strconv.Itoa(key), id))
 			if err == redis.ErrNil {
 				//没数据 直接提交一个新的
 				uwData.UserId = id
@@ -128,7 +133,7 @@ func checkWorkData() {
 			}
 			//记录到数据库
 			dataByte, _ := json.Marshal(uwData)
-			Rconn.Do("hset", "work"+strconv.Itoa(key), id, string(dataByte))
+			rconn.Do("hset", "work"+strconv.Itoa(key), id, string(dataByte))
 		}
 	}
 }
@@ -152,7 +157,9 @@ func sendWorkData(user data.User, conn net.Conn, workMes data.WorkMes) {
 
 	//获取课程数据
 	workResMes.Id = workMes.Id
-	res, _ := redis.String(Rconn.Do("hget", "work"+strconv.Itoa(workResMes.Id), "workData"))
+	rconn := RconnPool.Get()
+	defer rconn.Close()
+	res, _ := redis.String(rconn.Do("hget", "work"+strconv.Itoa(workResMes.Id), "workData"))
 	var wData data.WorkData
 	json.Unmarshal([]byte(res), &wData)
 	workResMes.Type = wData.Type
@@ -161,7 +168,7 @@ func sendWorkData(user data.User, conn net.Conn, workMes data.WorkMes) {
 	workResMes.FullScore = wData.FullScore
 
 	var uwData data.UserWorkData
-	res, err := redis.String(Rconn.Do("hget", "work"+strconv.Itoa(workResMes.Id), user.UserId))
+	res, err := redis.String(rconn.Do("hget", "work"+strconv.Itoa(workResMes.Id), user.UserId))
 	if err == redis.ErrNil {
 		//没数据
 		workResMes.Answer = ""
@@ -194,7 +201,9 @@ func sendWorkSub(user data.User, conn net.Conn, workSubMes data.WorkSubMes) {
 
 	//获取课程数据
 	workSubResMes.Id = workSubMes.Id
-	res, _ := redis.String(Rconn.Do("hget", "work"+strconv.Itoa(workSubResMes.Id), "workData"))
+	rconn := RconnPool.Get()
+	defer rconn.Close()
+	res, _ := redis.String(rconn.Do("hget", "work"+strconv.Itoa(workSubResMes.Id), "workData"))
 	var wData data.WorkData
 	json.Unmarshal([]byte(res), &wData)
 	//文件题先写出文件并把答案改成文件目录
@@ -224,7 +233,7 @@ func sendWorkSub(user data.User, conn net.Conn, workSubMes data.WorkSubMes) {
 
 	//记录到数据库
 	dataByte, _ = json.Marshal(uwData)
-	Rconn.Do("hset", "work"+strconv.Itoa(workSubResMes.Id), uwData.UserId, string(dataByte))
+	rconn.Do("hset", "work"+strconv.Itoa(workSubResMes.Id), uwData.UserId, string(dataByte))
 
 	//发送数据
 	msg.Type = data.WorkSubResMesType
@@ -233,5 +242,5 @@ func sendWorkSub(user data.User, conn net.Conn, workSubMes data.WorkSubMes) {
 	dataByte, _ = json.Marshal(msg)
 	tcp.WritePkg(conn, dataByte)
 
-	fmt.Printf("[W][%s]学生%s提交了作业%d：%s\n", uwData.UserId, user.UserName, workSubMes.Id, uwData.Answer)
+	color.HiMagenta("[Work][%s]学生%s提交了作业%d：%s\n", uwData.UserId, user.UserName, workSubMes.Id, uwData.Answer)
 }

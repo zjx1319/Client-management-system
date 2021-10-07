@@ -3,10 +3,11 @@ package main
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"os"
 	"src/data"
 	"src/tcp"
+
+	"github.com/fatih/color"
 )
 
 var teacher data.User
@@ -15,13 +16,14 @@ func init() {
 	teacher.UserId = "teacher"
 	teacher.UserName = "teacher"
 }
-func sendMsg(s string) { //本函数参数为空文本进入菜单 非空可直接发送全体消息
+
+//发送消息 本函数参数为空文本进入菜单 非空可直接发送全体消息
+func sendMsg(s string) {
 	if s == "" {
 		for {
-			fmt.Println("------------------")
-			fmt.Println("请输入你想发送的内容 输入“.exit” 返回主菜单")
-			fmt.Println("输入“.private”可发送私聊消息 ")
-			fmt.Println("请输入内容：")
+			color.Cyan("请输入你想发送的内容 输入“.exit” 返回主菜单\n")
+			color.Cyan("输入“.private”可发送私聊消息\n")
+			color.Cyan("请输入内容：\n")
 			input := bufio.NewScanner(os.Stdin)
 			for {
 				input.Scan()
@@ -29,15 +31,15 @@ func sendMsg(s string) { //本函数参数为空文本进入菜单 非空可直�
 					return
 				} else if input.Text() == ".private" {
 					var chatPMes data.ChatPMes
-					fmt.Println("请输入对方ID")
+					color.Cyan("请输入对方ID")
 					input.Scan()
 					chatPMes.RecieveId = input.Text()
-					fmt.Println("请输入发送的内容")
+					color.Cyan("请输入发送的内容")
 					input.Scan()
 					chatPMes.Content = input.Text()
 					sendPResMsg(teacher, chatPMes)
 				} else if input.Text() == "" {
-					fmt.Println("不能发送空消息哦")
+					color.Cyan("不能发送空消息哦")
 				} else {
 					sendMsg(input.Text())
 				}
@@ -69,13 +71,13 @@ func sendResMsg(user data.User, chatMes data.ChatMes) {
 		}
 	}
 
-	fmt.Printf("[M][%s]%s:%s\n", chatResMes.SendUserId, chatResMes.SendUserName, chatResMes.Content)
+	color.HiBlue("[Message][%s]%s:%s\n", chatResMes.SendUserId, chatResMes.SendUserName, chatResMes.Content)
 }
 
 func sendPResMsg(user data.User, chatPMes data.ChatPMes) {
 	//处理发给老师的消息
 	if chatPMes.RecieveId == "teacher" {
-		fmt.Printf("[P][%s]%s:%s\n", user.UserId, user.UserName, chatPMes.Content)
+		color.HiMagenta("[Private][%s]%s:%s\n", user.UserId, user.UserName, chatPMes.Content)
 		return
 	}
 

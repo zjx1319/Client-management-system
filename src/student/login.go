@@ -2,11 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net"
 	"src/config"
 	"src/data"
 	"src/tcp"
+
+	"github.com/fatih/color"
 )
 
 func login() (err error) {
@@ -45,15 +46,15 @@ func login() (err error) {
 	var loginResMes data.LoginResMes
 	json.Unmarshal([]byte(msg.Data), &loginResMes)
 	if loginResMes.Result == data.Login_IDNotFound {
-		fmt.Println("用户不存在!")
+		color.Red("用户不存在!\n")
 		return
 	} else if loginResMes.Result == data.Login_PwdError {
-		fmt.Println("密码错误！")
+		color.Red("密码错误！\n")
 		return
 	} else if loginResMes.Result == data.Login_Success {
 		user.UserName = loginResMes.Username
-		fmt.Printf("登录成功,%s,欢迎您\n", user.UserName)
-		fmt.Printf("当前课程为：%s \n", loginResMes.ClassName)
+		color.Green("登录成功,%s,欢迎您\n", user.UserName)
+		color.Cyan("当前课程为：%s \n", loginResMes.ClassName)
 		//启动消息接收线程
 		go process()
 		//启动屏幕内容检测线程

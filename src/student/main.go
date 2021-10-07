@@ -6,13 +6,15 @@ import (
 	"os"
 	"src/config"
 	"src/data"
+
+	"github.com/fatih/color"
 )
 
 var user data.User
 var conn net.Conn
 
 func main() {
-	//测试用
+	//读取命令行参数
 	com := os.Args
 	if len(com) == 4 {
 		user.UserId = com[1]
@@ -22,10 +24,10 @@ func main() {
 	}
 
 	for {
-		fmt.Println("--------欢迎使用电子教室管理系统学生端-------")
-		fmt.Print("请输入学号：")
+		color.Cyan("欢迎使用电子教室管理系统学生端")
+		color.Cyan("请输入学号：")
 		fmt.Scanf("%s\n", &user.UserId)
-		fmt.Print("请输入密码：")
+		color.Cyan("请输入密码：")
 		fmt.Scanf("%s\n", &user.UserPwd)
 
 		//登录

@@ -3,20 +3,20 @@ package main
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"os"
 	"src/data"
 	"src/tcp"
+
+	"github.com/fatih/color"
 )
 
 func sendMsg() {
 	var msg data.Message
 	var dataByte []byte
 	for {
-		fmt.Println("------------------")
-		fmt.Println("请输入你想发送的内容 输入“.exit” 返回主菜单")
-		fmt.Println("输入“.private”可发送私聊消息 ")
-		fmt.Println("请输入内容：")
+		color.Cyan("请输入你想发送的内容 输入“.exit” 返回主菜单\n")
+		color.Cyan("输入“.private”可发送私聊消息\n")
+		color.Cyan("请输入内容：\n")
 		input := bufio.NewScanner(os.Stdin)
 		for {
 			input.Scan()
@@ -24,10 +24,10 @@ func sendMsg() {
 				return
 			} else if input.Text() == ".private" {
 				var chatPMes data.ChatPMes
-				fmt.Println("请输入对方ID(输入teacher可发给老师)")
+				color.Cyan("请输入对方ID(输入teacher可发给老师)\n")
 				input.Scan()
 				chatPMes.RecieveId = input.Text()
-				fmt.Println("请输入发送的内容")
+				color.Cyan("请输入发送的内容\n")
 				input.Scan()
 				chatPMes.Content = input.Text()
 				//数据处理
@@ -38,9 +38,9 @@ func sendMsg() {
 				//发送数据
 				tcp.WritePkg(conn, dataByte)
 
-				fmt.Printf("[P][%s][to %s]%s:%s\n", user.UserId, chatPMes.RecieveId, user.UserName, chatPMes.Content)
+				color.HiMagenta("[Private][%s][to %s]%s:%s\n", user.UserId, chatPMes.RecieveId, user.UserName, chatPMes.Content)
 			} else if input.Text() == "" {
-				fmt.Println("不能发送空消息哦")
+				color.Cyan("不能发送空消息哦\n")
 			} else {
 				//数据处理
 				var chatMes data.ChatMes
@@ -52,7 +52,7 @@ func sendMsg() {
 				//发送数据
 				tcp.WritePkg(conn, dataByte)
 
-				fmt.Printf("[M][%s]%s:%s\n", user.UserId, user.UserName, chatMes.Content)
+				color.HiBlue("[Message][%s]%s:%s\n", user.UserId, user.UserName, chatMes.Content)
 			}
 		}
 	}

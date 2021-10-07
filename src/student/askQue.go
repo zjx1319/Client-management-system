@@ -3,18 +3,17 @@ package main
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"os"
 	"src/data"
 	"src/tcp"
+
+	"github.com/fatih/color"
 )
 
 func askQue() {
 	var msg data.Message
 	var dataByte []byte
-	fmt.Println("------------------")
-	fmt.Println("请输入你遇到的问题，不想输入就直接回车吧~")
-	fmt.Println("请输入内容：")
+	color.Cyan("请输入你遇到的问题:\n")
 	input := bufio.NewScanner(os.Stdin)
 	input.Scan()
 	if input.Text() == ".exit" {
@@ -30,6 +29,6 @@ func askQue() {
 		//发送数据
 		tcp.WritePkg(conn, dataByte)
 
-		fmt.Printf("[Q]你发起了一个提问:%s\n", queMes.Content)
+		color.HiMagenta("[Question]你发起了一个提问:%s\n", queMes.Content)
 	}
 }

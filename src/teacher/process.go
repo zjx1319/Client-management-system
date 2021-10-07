@@ -8,6 +8,8 @@ import (
 	"src/tcp"
 	"strconv"
 	"time"
+
+	"github.com/fatih/color"
 )
 
 //处理和客户端的通讯
@@ -17,16 +19,18 @@ func process(conn net.Conn) {
 	var userClassData data.UserClassData
 	var userProcess UserProcess
 	for {
-		time.Sleep(time.Millisecond * 100)
-		//延迟一下 确保ReadPkg能读到完整数据
+		//time.Sleep(time.Millisecond * 100)
+		////延迟一下 确保ReadPkg能读到完整数据
 		msg, err := tcp.ReadPkg(conn)
 		if err != nil {
 			//出现错误 掉线了
 			if user.UserName != "" {
-				fmt.Printf("[L][%s]学生%s异常掉线\n", user.UserId, user.UserName)
+				rconn := RconnPool.Get()
+				defer rconn.Close()
+				color.Green("[Logout][%s]学生%s异常掉线\n", user.UserId, user.UserName)
 				userClassData.LeaveTime = time.Now()
 				dataByte, _ := json.Marshal(userClassData)
-				Rconn.Do("hset", "class"+strconv.Itoa(class.ClassNo), user.UserId, string(dataByte))
+				rconn.Do("hset", "class"+strconv.Itoa(class.ClassNo), user.UserId, string(dataByte))
 				DelOnlineUser(user.UserId)
 			}
 			return
@@ -35,7 +39,9 @@ func process(conn net.Conn) {
 			return
 		}
 		switch msg.Type {
-		case data.LoginMesType: //处理登录
+		case data.LoginMesType: //登录
+			rconn := RconnPool.Get()
+			defer rconn.Close()
 			var loginMes data.LoginMes
 			json.Unmarshal([]byte(msg.Data), &loginMes)
 			var loginResMes data.LoginResMes
@@ -50,12 +56,12 @@ func process(conn net.Conn) {
 				userClassData.ClassStatus = 0
 				userClassData.Violate = 0
 				dataByte, _ := json.Marshal(userClassData)
-				Rconn.Do("hset", "class"+strconv.Itoa(class.ClassNo), user.UserId, string(dataByte))
+				rconn.Do("hset", "class"+strconv.Itoa(class.ClassNo), user.UserId, string(dataByte))
 				userProcess.userData = user
 				userProcess.conn = conn
 				AddOnlineUser(&userProcess)
 				onlineNum := GetOnlineUserNum()
-				fmt.Printf("[L][%s]学生%s已登录 机位为%s 当前在线：%d\n", loginMes.UserId, user.UserName, loginMes.Seat, onlineNum)
+				color.Green("[Login][%s]学生%s已登录 机位为%s 当前在线：%d\n", loginMes.UserId, user.UserName, loginMes.Seat, onlineNum)
 			}
 
 			//使用json序列化
@@ -64,23 +70,30 @@ func process(conn net.Conn) {
 			msg.Data = string(dataByte)
 			dataByte, _ = json.Marshal(msg)
 
-			//发送消息给客户
+			//发送登录成功消息
 			tcp.WritePkg(conn, []byte(dataByte))
 
+			//发送黑名单
 			if loginResMes.Result == data.Logout_Success {
 				go sendBlockList(conn)
 			}
-		case data.LogoutMesType: //处理注销
+		case data.LogoutMesType: //注销
 			var logoutMes data.LogoutMes
 			json.Unmarshal([]byte(msg.Data), &logoutMes)
 			var logoutResMes data.LogoutResMes
 			if logoutMes.UserId == user.UserId {
+				rconn := RconnPool.Get()
+				defer rconn.Close()
 				logoutResMes.Result = data.Logout_Success
 				userClassData.LeaveTime = time.Now()
+				if userClassData.JoinTime.Before(classData.BeginTime) && userClassData.LeaveTime.After(classData.EndTime) {
+					userClassData.ClassStatus = 1
+				}
 				dataByte, _ := json.Marshal(userClassData)
-				Rconn.Do("hset", "class"+strconv.Itoa(class.ClassNo), user.UserId, string(dataByte))
+				rconn.Do("hset", "class"+strconv.Itoa(class.ClassNo), user.UserId, string(dataByte))
 				DelOnlineUser(user.UserId)
-				fmt.Printf("[L][%s]学生%s已离开\n", user.UserId, user.UserName)
+				color.Green("[Logout][%s]学生%s已离开\n", user.UserId, user.UserName)
+
 				//使用json序列化
 				dataByte, _ = json.Marshal(logoutResMes)
 				msg.Type = data.LogoutResMesType
@@ -90,54 +103,52 @@ func process(conn net.Conn) {
 				//发送消息给客户
 				tcp.WritePkg(conn, []byte(dataByte))
 				return
-			} else {
-				fmt.Printf("[W]注销消息出现错误 %s %s\n", logoutMes.UserId, user.UserId)
 			}
-		case data.ChatMesType: //处理聊天
+		case data.ChatMesType: //聊天消息
 			var chatMes data.ChatMes
 			json.Unmarshal([]byte(msg.Data), &chatMes)
 			sendResMsg(user, chatMes)
-		case data.ChatPMesType: //处理私聊
+		case data.ChatPMesType: //私聊消息
 			var chatPMes data.ChatPMes
 			json.Unmarshal([]byte(msg.Data), &chatPMes)
 			sendPResMsg(user, chatPMes)
-		case data.QueMesType:
+		case data.QueMesType: //提问消息
 			var queMes data.QueMes
 			json.Unmarshal([]byte(msg.Data), &queMes)
 			askQueRes(user, queMes, userClassData.Seat)
-		case data.WorkAllMesType:
+		case data.WorkAllMesType: //获取作业
 			sendWorkAll(conn)
-		case data.WorkMesType:
+		case data.WorkMesType: //查询作业信息
 			var workMes data.WorkMes
 			json.Unmarshal([]byte(msg.Data), &workMes)
 			sendWorkData(user, conn, workMes)
-		case data.WorkSubMesType:
+		case data.WorkSubMesType: //提交作业
 			var workSubMes data.WorkSubMes
 			json.Unmarshal([]byte(msg.Data), &workSubMes)
 			sendWorkSub(user, conn, workSubMes)
-		case data.ScreenReportType:
+		case data.ScreenReportType: //屏幕检测
 			var screenReport data.ScreenReport
 			json.Unmarshal([]byte(msg.Data), &screenReport)
 			userMgr[user.UserId].screenUnchangeTime = screenReport.UnchangeTime
 			if screenReport.UnchangeTime > 2 {
-				fmt.Printf("[I][%s]学生%s屏幕内容已连续%d分钟未改变\n", user.UserId, user.UserName, screenReport.UnchangeTime)
+				color.Yellow("[Violation][%s]学生%s屏幕内容已连续%d分钟未改变\n", user.UserId, user.UserName, screenReport.UnchangeTime)
 			}
-		case data.ScreenShotResType:
+		case data.ScreenShotResType: //屏幕截图
 			var screenShotRes data.ScreenShotRes
 			json.Unmarshal([]byte(msg.Data), &screenShotRes)
 			viewScreenShot(user, screenShotRes)
-		case data.ScreenVideoResType:
+		case data.ScreenVideoResType: //屏幕视频
 			var screenVideoRes data.ScreenVideoRes
 			json.Unmarshal([]byte(msg.Data), &screenVideoRes)
 			viewScreenVideo(screenVideoRes)
 			conn.Close()
 			return
-		case data.BlockListReportType:
+		case data.BlockListReportType: //违规消息
 			var BlockListReport data.BlockListReport
 			json.Unmarshal([]byte(msg.Data), &BlockListReport)
-			BlockListDeal(&userClassData, user, BlockListReport.Behavior)
+			BlockListDeal(&userClassData, &user, BlockListReport.Behavior)
 		default:
-			fmt.Printf("[W]连接%s的消息类型为%s 无法处理\n", conn.RemoteAddr().String(), msg.Type)
+			errorReport(fmt.Errorf("收到来自" + conn.RemoteAddr().String() + "的消息 类型为" + msg.Type + " 无法处理"))
 			return
 		}
 	}

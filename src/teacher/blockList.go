@@ -2,11 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net"
 	"src/data"
 	"src/tcp"
 	"strconv"
+
+	"github.com/fatih/color"
 )
 
 var BlockListProcess []string
@@ -14,7 +15,7 @@ var BlockListWeb []string
 
 func init() {
 	BlockListProcess = []string{"steam.exe", "wegame.exe"}
-	BlockListWeb = []string{"4399.com", "7k7k.com"}
+	BlockListWeb = []string{"4399.com", "www.4399.com"}
 }
 
 func sendBlockList(conn net.Conn) {
@@ -36,9 +37,11 @@ func sendBlockList(conn net.Conn) {
 	tcp.WritePkg(conn, dataByte)
 }
 
-func BlockListDeal(ucData *data.UserClassData, user data.User, behavior string) {
-	fmt.Printf("[B][%s]学生%s违规操作：%s\n", user.UserId, user.UserName, behavior)
+func BlockListDeal(ucData *data.UserClassData, user *data.User, behavior string) {
+	color.Yellow("[Violation][%s]学生%s违规操作：%s\n", user.UserId, user.UserName, behavior)
 	ucData.Violate++
 	dataByte, _ := json.Marshal(ucData)
-	Rconn.Do("hset", "class"+strconv.Itoa(class.ClassNo), user.UserId, string(dataByte))
+	rconn := RconnPool.Get()
+	defer rconn.Close()
+	rconn.Do("hset", "class"+strconv.Itoa(class.ClassNo), user.UserId, string(dataByte))
 }
