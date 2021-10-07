@@ -26,6 +26,7 @@ type UserClassData struct {
 	JoinTime    time.Time `json:"joinTime"`
 	LeaveTime   time.Time `json:"leaveTime"`
 	Seat        string    `json:"seat"`
+	Violate     int       `json:"violate"` //违规次数
 }
 
 //用户作业数据

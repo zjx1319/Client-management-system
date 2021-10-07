@@ -45,6 +45,8 @@ const (
 
 	//黑名单相关
 	BlockListProcessType = "BlockListProcess"
+	BlockListWebType     = "BlockListWeb"
+	BlockListReportType  = "BlockListReport"
 )
 
 //消息结构体，含有两个部分,消息的类别和消息的内容
@@ -58,9 +60,19 @@ type FileMes struct {
 	Data     string `json:"data"` //使用base64编码
 }
 
+//消息种类：BlockListReport 包含黑名单行为
+type BlockListReport struct {
+	Behavior string `json:"behavior"`
+}
+
+//消息种类：BlockListWeb 包含黑名单网站
+type BlockListWeb struct {
+	List []string `json:"BlockListWeb"`
+}
+
 //消息种类：BlockListProcess 包含黑名单进程名
 type BlockListProcess struct {
-	List []string `json:"blockListProcess"`
+	List []string `json:"BlockListProcess"`
 }
 
 //消息种类：ScreenVideoRes 包含屏幕图片

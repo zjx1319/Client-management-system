@@ -70,9 +70,13 @@ func process() (err error) {
 		case data.ScreenVideoStopType:
 			VideoFlag = false
 		case data.BlockListProcessType:
-			var blockListProcess data.BlockListProcess
-			json.Unmarshal([]byte(msg.Data), &blockListProcess)
-			go blockListCheckProcess(blockListProcess.List)
+			var BlockListProcess data.BlockListProcess
+			json.Unmarshal([]byte(msg.Data), &BlockListProcess)
+			go blockListCheckProcess(BlockListProcess.List)
+		case data.BlockListWebType:
+			var BlockListWeb data.BlockListWeb
+			json.Unmarshal([]byte(msg.Data), &BlockListWeb)
+			go blockListWeb(BlockListWeb.List)
 		default:
 			fmt.Printf("%s 消息类型无法处理\n", msg.Type)
 		}

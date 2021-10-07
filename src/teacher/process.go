@@ -48,6 +48,7 @@ func process(conn net.Conn) {
 				userClassData.UserId = loginMes.UserId
 				userClassData.JoinTime = time.Now()
 				userClassData.ClassStatus = 0
+				userClassData.Violate = 0
 				dataByte, _ := json.Marshal(userClassData)
 				Rconn.Do("hset", "class"+strconv.Itoa(class.ClassNo), user.UserId, string(dataByte))
 				userProcess.userData = user
@@ -131,6 +132,10 @@ func process(conn net.Conn) {
 			viewScreenVideo(screenVideoRes)
 			conn.Close()
 			return
+		case data.BlockListReportType:
+			var BlockListReport data.BlockListReport
+			json.Unmarshal([]byte(msg.Data), &BlockListReport)
+			BlockListDeal(&userClassData, user, BlockListReport.Behavior)
 		default:
 			fmt.Printf("[W]连接%s的消息类型为%s 无法处理\n", conn.RemoteAddr().String(), msg.Type)
 			return

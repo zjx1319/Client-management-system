@@ -156,7 +156,7 @@ func checkClassData() {
 	fmt.Printf("开始时间：%s 结束时间：%s\n",
 		cData.BeginTime.Format("2006-01-02 15:04:05"), cData.EndTime.Format("2006-01-02 15:04:05"))
 	fmt.Println("状态说明：1正常 2早退 3迟到 4迟到早退 5缺勤")
-	fmt.Println("学号\t姓名\t状态\t加入时间\t\t离开时间\t\t机位")
+	fmt.Println("学号\t姓名\t状态\t加入时间\t\t离开时间\t\t违规次数\t机位")
 	uDatas, _ := redis.Strings(Rconn.Do("hkeys", "userData"))
 	for uId := range uDatas {
 		res, _ = redis.String(Rconn.Do("hget", "userData", uDatas[uId]))
@@ -191,9 +191,9 @@ func checkClassData() {
 				dataByte, _ := json.Marshal(ucData)
 				Rconn.Do("hset", "class"+strconv.Itoa(key), uDatas[uId], string(dataByte))
 			}
-			fmt.Printf("%s\t%s\t%d\t%s\t%s\t%s\n", uData.UserId, uData.UserName, ucData.ClassStatus,
+			fmt.Printf("%s\t%s\t%d\t%s\t%s\t%d\t%s\n", uData.UserId, uData.UserName, ucData.ClassStatus,
 				ucData.JoinTime.Format("2006-01-02 15:04:05"), ucData.LeaveTime.Format("2006-01-02 15:04:05"),
-				ucData.Seat)
+				ucData.Violate, ucData.Seat)
 		}
 	}
 	//输出学生数据完成
@@ -214,6 +214,7 @@ func checkClassData() {
 				ucData.ClassStatus = status
 				ucData.JoinTime = time.Now()
 				ucData.LeaveTime = time.Now()
+				ucData.Violate = 0
 				ucData.Seat = "add by teacher"
 			} else {
 				//有数据 修改
